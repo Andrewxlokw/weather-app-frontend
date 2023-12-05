@@ -25,7 +25,7 @@ function App() {
   
   const [weatherData, setWeatherData] = useState({
     icon: '/website_logo.png', // URL to weather icon
-    temperature: '1',
+    temperature: '1.0',
     condition: 'goood',
     windSpeed: '1145',
     humidity: '14',
@@ -51,11 +51,11 @@ function App() {
     setUnit(e.target.value);
   };
 
-const handleSubmit = () => {
-  setDisplayedCityName(inputCityName);
-  fetchWeatherData(inputCityName, unit); // Fetch weather data immediately
-  console.log("Getting weather for: ", inputCityName, unit);
-};
+  const handleSubmit = () => {
+    setDisplayedCityName(inputCityName); // Update displayed city name
+    fetchWeatherData(inputCityName, unit);
+    console.log("Getting weather for: ", inputCityName, unit);
+  };
 
   const handleSetDefaultLocation = () => {
     // Implement the logic to send the city name to the backend
@@ -65,14 +65,16 @@ const handleSubmit = () => {
 
   const fetchWeatherData = (city, currentUnit) => {
     // Replace with your API endpoint
-    // const url = new URL('http://127.0.0.1:8000/api/weather-data'); // Replace with your actual API URL
-    // url.search = new URLSearchParams({ city: displayedCityName, unit }).toString();
-  
+    const url = new URL('http://127.0.0.1:8000/api/weather-data'); // Replace with your actual API URL
+    url.search = new URLSearchParams({ city: displayedCityName, unit }).toString();
+    
+    const convertUnit = currentUnit === 'Celsius' ? 'metric' : 'imperial';
 
-
-    fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + currentUnit)
+    // fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + currentUnit)
+    fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + convertUnit)
       .then(response => response.json())
       .then(data => {
+        console.log("API Response:", data);
         // Assuming 'data' is the object containing weather information
         setWeatherData({
           temperature: data.temperature,
@@ -96,7 +98,7 @@ const handleSubmit = () => {
       .catch(error => console.error('Error fetching activity recommendation:', error));
   };
 
-  
+
   // Call this function when the city is set or unit changes
   useEffect(() => {
     fetchWeatherData(displayedCityName, unit);
@@ -112,8 +114,8 @@ const handleSubmit = () => {
           <Navbar.Brand href="/">
             <img
               src="/website_logo.png"
-              width="110"  // Adjust width as needed
-              height="auto"  // Height auto for maintaining aspect ratio
+              width="110"  
+              height="auto"  
               className="d-inline-block align-top"
               alt="Logo"
             />
@@ -172,6 +174,8 @@ const handleSubmit = () => {
           <li>Humidity: {weatherData.humidity}%</li>
         </ul>
       </div> */}
+      
+
       <div className="weather-info">
         <img src={weatherData.icon} alt="Weather Icon" className="weather-icon" />
         <div className="temperature-display">
