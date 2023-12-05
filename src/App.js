@@ -51,10 +51,11 @@ function App() {
     setUnit(e.target.value);
   };
 
-  const handleSubmit = () => {
-    setDisplayedCityName(inputCityName); // Update displayed city name
-    console.log("Getting weather for: ", inputCityName, unit);
-  };
+const handleSubmit = () => {
+  setDisplayedCityName(inputCityName);
+  fetchWeatherData(inputCityName, unit); // Fetch weather data immediately
+  console.log("Getting weather for: ", inputCityName, unit);
+};
 
   const handleSetDefaultLocation = () => {
     // Implement the logic to send the city name to the backend
@@ -62,11 +63,26 @@ function App() {
     // Example: fetch('/api/set-default-location', { method: 'POST', body: JSON.stringify({ cityName }) });
   };
 
-  const fetchWeatherData = () => {
+  const fetchWeatherData = (city, currentUnit) => {
     // Replace with your API endpoint
-    fetch('/api/weather-data')
+    // const url = new URL('http://127.0.0.1:8000/api/weather-data'); // Replace with your actual API URL
+    // url.search = new URLSearchParams({ city: displayedCityName, unit }).toString();
+  
+
+
+    fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + currentUnit)
       .then(response => response.json())
-      .then(data => setWeatherData(data))
+      .then(data => {
+        // Assuming 'data' is the object containing weather information
+        setWeatherData({
+          temperature: data.temperature,
+          condition: data.condition,
+          icon: data.icon,
+          humidity: data.humidity,
+          windSpeed: data.wind_speed,
+          // ... set other pieces of weather data as needed ...
+        });
+      })
       .catch(error => console.error('Error fetching weather data:', error));
   };
 
@@ -83,10 +99,11 @@ function App() {
   
   // Call this function when the city is set or unit changes
   useEffect(() => {
-    fetchWeatherData();
-    fetchActivityRecommendation();
+    fetchWeatherData(displayedCityName, unit);
+    // fetchActivityRecommendation();
   }, [displayedCityName, unit]);
 
+  
   // "/website_logo.png"
   return (
     <div className="App">
