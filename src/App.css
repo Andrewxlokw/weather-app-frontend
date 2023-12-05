@@ -36,3 +36,102 @@
     transform: rotate(360deg);
   }
 }
+
+
+.location-bar {
+  /* background-color: #yourUniqueColor; Replace with your desired color */
+  padding: 10px 0; /* Add some padding */
+  color: rgb(0, 0, 0); /* Set text color */
+  display: flex; /* Use flexbox */
+  align-items: center; /* Center align items vertically */
+  justify-content: flex-start; /* Align content to the start (left) */
+}
+
+.location-bar .container {
+  text-align: left;
+  flex-grow: 1; /* Allow container to take available horizontal space */
+}
+
+.location-bar input[type="text"] {
+  margin-left: 10px;
+  padding: 5px;
+}
+
+.location-bar select {
+  margin-left: 20px; /* Increased margin */
+  padding: 5px;
+}
+
+.location-bar button {
+  margin-left: 20px; /* Increased margin */
+  padding: 5px;
+  border: none;
+}
+
+
+/* weather city */
+.weather-city .container{
+  text-align: left; /* Align text to the left */
+  padding-left: 15px; /* Add some padding to the left, if needed */
+  /* Add any additional styles you need here */
+}
+
+/* weather info */
+.weather-info {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  padding-left: 15%;
+  padding-top: 20px;
+}
+
+.weather-icon {
+  width: 100px; /* Adjust as needed */
+  height: auto;
+}
+
+.temperature-display {
+  font-size: 2em; /* Large font size for temperature */
+  /* margin-left: 20px; */
+  padding-left: 5%;
+  padding-right: 5%;
+}
+
+.weather-details {
+  margin-left: 20px;
+  /* list-style: none; */
+  width: 350px;
+  border-left: 1px solid #ccc; /* Vertical line */
+}
+
+.weather-details li {
+  padding: 5px 0;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #ccc; /* Horizontal line */
+}
+
+.weather-details li:last-child {
+  border-bottom: none; /* Remove the border for the last item */
+}
+
+
+.activity-recommendation-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.recommendation-text h5 {
+  font-weight: bold;
+}
+
+.recommendation-text p {
+  margin: 0;
+}
+
+.recommendation-icon {
+  /* Additional styling for icon */
+}
