@@ -9,11 +9,15 @@ function App() {
   // const cityName = "Sample City 11"; // Replace with dynamic data
   // const regionName = "Sample Region 11"; // Replace with dynamic data
 
-  const [inputCityName, setInputCityName] = useState(''); // State for the input city name
-  const [displayedCityName, setDisplayedCityName] = useState('Ottawa'); // State for the displayed city name
-  const [unit, setUnit] = useState('Celsius'); // State for the unit selection
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(true); // Simple auth state, set this to false later !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  const [inputCityName, setInputCityName] = useState('');               // State for the input city name
+  const [displayedCityName, setDisplayedCityName] = useState('vancouver'); // State for the displayed city name Ottawa
+  const [unit, setUnit] = useState('Celsius');                          // State for the unit selection
 
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false); // Simple auth state, set this to false later !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [loginCredentials, setLoginCredentials] = useState({ username: '', password: '' });
+
+  
   // const [weatherData, setWeatherData] = useState({
   //   icon: '', // URL to weather icon
   //   temperature: '',
@@ -22,7 +26,7 @@ function App() {
   //   humidity: '',
   // });
 
-  
+  // Replace with dynamic data!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   const [weatherData, setWeatherData] = useState({
     icon: '/website_logo.png', // URL to weather icon
     temperature: '1.0',
@@ -36,7 +40,8 @@ function App() {
   //   text: '', // Text for the recommendation
   //   iconName: '', // Name of the Bootstrap icon
   // });
-  
+
+  // Replace with dynamic data!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   const [activityRecommendation, setActivityRecommendation] = useState({
     text: 'sadasfkasklms,czxcs', // Text for the recommendation
     iconName: 'bi-0-circle', // Name of the Bootstrap icon
@@ -54,24 +59,74 @@ function App() {
   const handleSubmit = () => {
     setDisplayedCityName(inputCityName); // Update displayed city name
     fetchWeatherData(inputCityName, unit);
-    console.log("Getting weather for: ", inputCityName, unit);
+    console.log("Getting weather for this city: ", inputCityName, unit);
   };
 
+
+  // token
+  // function getCsrfToken() {
+  //   let csrfToken = null;
+  //   if (document.cookie) {
+  //       const cookies = document.cookie.split(';');
+  //       for (let cookie of cookies) {
+  //           const trimmedCookie = cookie.trim();
+  //           if (trimmedCookie.startsWith('csrftoken=')) {
+  //               csrfToken = trimmedCookie.substring('csrftoken='.length);
+  //               break;
+  //           }
+  //       }
+  //   }
+  //   return csrfToken;
+  // }
+  
+  function getCsrfToken() {
+      return document.cookie.split('; ')
+          .find(row => row.startsWith('csrftoken'))
+          ?.split('=')[1];
+  }
+  const csrfToken = getCsrfToken();
+  console.log("csrfToken is ",csrfToken);
   const handleSetDefaultLocation = () => {
     // Implement the logic to send the city name to the backend
-    console.log("Sending city to backend: ", inputCityName);
+    console.log("Sending city name to backend: ", inputCityName);
     // Example: fetch('/api/set-default-location', { method: 'POST', body: JSON.stringify({ cityName }) });
-  };
+
+    fetch('http://127.0.0.1:8000/api/set-default-city/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken, // Include CSRF token in the request header
+        },
+        body: JSON.stringify({ default_city: inputCityName }),
+        credentials: 'include' // If using cookies for session management
+    })
+    // .then(response => response.json())
+    .then(response =>{
+      console.log("response is:", response.json());
+    })
+    .then(data => {
+        if (data.success) {
+            console.log("Default city set to:", data.default_city);
+            // Handle successful update
+        } else {
+            // Handle failure
+            alert('data error:', data.success);
+            // alert(data.message)
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+};
 
   const fetchWeatherData = (city, currentUnit) => {
-    // Replace with your API endpoint
-    const url = new URL('http://127.0.0.1:8000/api/weather-data'); // Replace with your actual API URL
-    url.search = new URLSearchParams({ city: displayedCityName, unit }).toString();
+    // const url = new URL('http://127.0.0.1:8000/api/weather-data'); 
+    // url.search = new URLSearchParams({ city: displayedCityName, unit }).toString();
     
     const convertUnit = currentUnit === 'Celsius' ? 'metric' : 'imperial';
 
     // fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + currentUnit)
-    fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + convertUnit)
+    fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + convertUnit, {credentials: "include"})
       .then(response => response.json())
       .then(data => {
         console.log("API Response:", data);
@@ -89,7 +144,7 @@ function App() {
   };
 
   const fetchActivityRecommendation = () => {
-    fetch('/api/activity-recommendation') // Your API endpoint
+    fetch('/api/activity-recommendation') 
       .then(response => response.json())
       .then(data => setActivityRecommendation({
         text: data.text,
@@ -98,6 +153,114 @@ function App() {
       .catch(error => console.error('Error fetching activity recommendation:', error));
   };
 
+  // login feature
+  // const handleLoginInputChange = (e) => {
+  //   setLoginCredentials({ ...loginCredentials, [e.target.name]: e.target.value });
+  // };
+  
+  const toggleLoginForm = () => {
+    setShowLoginForm(!showLoginForm);
+  };
+  const fetchDefaultCity = (token) => {
+    fetch('http://127.0.0.1:8000/api/get-default-city/', {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+      const defaultCity = data.default_city || 'Kingston';
+      setDisplayedCityName(defaultCity);
+      fetchWeatherData(defaultCity, 'metric'); // Assuming 'metric' as default unit
+    })
+    .catch(error => console.error('Error fetching default city:', error));
+};
+
+  // https://stackoverflow.com/questions/50732815/how-to-use-csrf-token-in-django-restful-api-and-react
+  const handleLogin = (event) => {
+    // const csrfToken = getCsrfToken();
+
+    const apiUnit = unit === 'Celsius' ? 'metric' : 'imperial';
+
+    const csrfToken = getCsrfToken('csrftoken');
+    event.preventDefault(); // Prevent form from reloading the page
+
+    fetch('http://127.0.0.1:8000/api/login/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // 'X-CSRFToken': csrfToken,
+      },
+      body: JSON.stringify(loginCredentials),
+      credentials: 'include'
+      // body: JSON.stringify({
+      //   username: 'user_test1',
+      //   password: 'Aa12345678'
+      // }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        setIsUserLoggedIn(true);
+        setShowLoginForm(false);
+
+
+        // const defaultCity = data.default_city || 'Kingston';
+        // fetchWeatherData(defaultCity, apiUnit);
+        // setDisplayedCityName(defaultCity)
+        // localStorage.setItem('token', data.token);
+
+        fetchDefaultCity(data.token);
+        // alert('Good Credentials');
+        console.log('Good Credentials');
+      } 
+      else {
+        alert('Invalid Credentials');
+      }
+    })
+    // .catch(error => {
+    //   console.error('Error:', error);
+    // });
+  };
+
+
+
+  const handleLogout = () => {
+    fetch('http://127.0.0.1:8000/api/logout/', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+      },
+      credentials: 'include' // Needed to include the session cookie
+    })
+    .then(response => {
+      if (!response.ok) {
+          throw new Error('Logout failed');
+      }
+      return response.json();
+    })
+    .then(data => {
+        console.log("data is successfully");
+        if (data.success) {
+            console.log("Logged out successfully");
+            localStorage.removeItem('token');
+            setIsUserLoggedIn(false);
+            // Redirect or update UI as needed
+            // Refresh the page
+            window.location.reload();
+        }
+        else{
+          alert('log out failed');
+        }
+    })
+    .catch(error => {
+        // console.error('Logout error:', error);
+    });
+    // localStorage.removeItem('token');
+    // setIsUserLoggedIn(false);
+  };
 
   // Call this function when the city is set or unit changes
   useEffect(() => {
@@ -108,6 +271,7 @@ function App() {
   
   // "/website_logo.png"
   return (
+    
     <div className="App">
       <Navbar bg="light" expand="lg">
         <Container>
@@ -121,7 +285,8 @@ function App() {
             />
           </Navbar.Brand>
           <Nav className="ms-auto">
-            <Nav.Link href="/signin">Sign In</Nav.Link>
+            {/* <Nav.Link href="/signin">Sign In</Nav.Link> */}
+            <Nav.Link onClick={toggleLoginForm}>Sign In</Nav.Link>
           </Nav>
         </Container>
       </Navbar>
@@ -209,9 +374,29 @@ function App() {
       </div>
     </div>
 
+  {showLoginForm && (
+    <form onSubmit={handleLogin}>
+      <input
+        type="text"
+        value={loginCredentials.username}
+        onChange={e => setLoginCredentials({ ...loginCredentials, username: e.target.value })}
+        placeholder="Username"
+      />
+      <input
+        type="password"
+        value={loginCredentials.password}
+        onChange={e => setLoginCredentials({ ...loginCredentials, password: e.target.value })}
+        placeholder="Password"
+      />
+      <button type="submit">Login</button>
+    </form>
+  )}
+  {/* <button onClick={handleLogout}>Logout</button> */}
+  {isUserLoggedIn && <button onClick={handleLogout}>Logout</button>}
 
     </div>
   );
+
 }
 
 
