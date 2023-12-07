@@ -85,7 +85,7 @@ function App() {
           ?.split('=')[1];
   }
   const csrfToken = getCsrfToken();
-  console.log("csrfToken is ",csrfToken);
+  // console.log("csrfToken is ",csrfToken);
   const handleSetDefaultLocation = () => {
     // Implement the logic to send the city name to the backend
     console.log("Sending city name to backend: ", inputCityName);
@@ -239,17 +239,20 @@ function App() {
       if (!response.ok) {
           throw new Error('Logout failed');
       }
+      console.log("logout response is successfully");
       return response.json();
     })
     .then(data => {
-        console.log("data is successfully");
+        console.log("data is successfully", data.success);
         if (data.success) {
+            window.location.reload();
             console.log("Logged out successfully");
-            localStorage.removeItem('token');
-            setIsUserLoggedIn(false);
+            // localStorage.removeItem('token');
+            // setIsUserLoggedIn(false);
+            // window.location.reload();
             // Redirect or update UI as needed
             // Refresh the page
-            window.location.reload();
+
         }
         else{
           alert('log out failed');
@@ -263,10 +266,25 @@ function App() {
   };
 
   // Call this function when the city is set or unit changes
+  // useEffect(() => {
+  //   fetchWeatherData(displayedCityName, unit);
+  //   // fetchActivityRecommendation();
+  // }, [displayedCityName, unit]);
   useEffect(() => {
-    fetchWeatherData(displayedCityName, unit);
-    // fetchActivityRecommendation();
-  }, [displayedCityName, unit]);
+      fetch('http://127.0.0.1:8000/api/check-login-status/', {
+          credentials: 'include'
+      })
+      .then(response => response.json())
+      .then(data => {
+          setIsUserLoggedIn(data.is_logged_in);
+          console.log('data.is_logged_in is', data.is_logged_in)
+          if (data.is_logged_in) {
+              // Fetch the default city or perform other actions as needed
+              fetchDefaultCity();
+          }
+      })
+      .catch(error => console.error('Error:', error));
+  }, []);
 
   
   // "/website_logo.png"
@@ -393,6 +411,7 @@ function App() {
   )}
   {/* <button onClick={handleLogout}>Logout</button> */}
   {isUserLoggedIn && <button onClick={handleLogout}>Logout</button>}
+
 
     </div>
   );
