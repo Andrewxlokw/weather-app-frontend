@@ -3,48 +3,37 @@ import './App.css';
 import React, { useState, useEffect } from 'react';
 import { Navbar, Container, Nav } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Alert } from 'react-bootstrap';
+
 
 function App() {
-
-  // const cityName = "Sample City 11"; // Replace with dynamic data
-  // const regionName = "Sample Region 11"; // Replace with dynamic data
 
   const [inputCityName, setInputCityName] = useState('');               // State for the input city name
   const [displayedCityName, setDisplayedCityName] = useState('vancouver'); // State for the displayed city name Ottawa
   const [unit, setUnit] = useState('Celsius');                          // State for the unit selection
 
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false); // Simple auth state, set this to false later !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false); // Simple auth state
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [loginCredentials, setLoginCredentials] = useState({ username: '', password: '' });
 
-  
-  // const [weatherData, setWeatherData] = useState({
-  //   icon: '', // URL to weather icon
-  //   temperature: '',
-  //   condition: '',
-  //   windSpeed: '',
-  //   humidity: '',
-  // });
+  const [showSignUpForm, setShowSignUpForm] = useState(false);
+  const [signUpCredentials, setSignUpCredentials] = useState({ username: '', password: '' });
 
-  // Replace with dynamic data!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  const [darkMode, setDarkMode] = useState(false);
+
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
   const [weatherData, setWeatherData] = useState({
-    icon: '/website_logo.png', // URL to weather icon
-    temperature: '1.0',
-    condition: 'goood',
-    windSpeed: '1145',
-    humidity: '14',
+    icon: '', // URL to weather icon
+    temperature: '',
+    condition: '',
+    windSpeed: '',
+    humidity: '',
   });
-  
- 
-  // const [activityRecommendation, setActivityRecommendation] = useState({
-  //   text: '', // Text for the recommendation
-  //   iconName: '', // Name of the Bootstrap icon
-  // });
 
-  // Replace with dynamic data!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   const [activityRecommendation, setActivityRecommendation] = useState({
-    text: 'sadasfkasklms,czxcs', // Text for the recommendation
-    iconName: 'bi-0-circle', // Name of the Bootstrap icon
+    text: '', // Text for the recommendation
   });
 
   const SEVERE_WEATHER_CODES = new Set([
@@ -72,6 +61,21 @@ function App() {
     781,  // Tornado
   ]);
 
+  const handleIncorrectCityName = () => {
+    setShowAlert(true);
+    setAlertMessage("The city name entered is empty or incorrect. Please try again.");
+  };
+
+  const handleIncorrectLogin = () => {
+    setShowAlert(true);
+    setAlertMessage("The username entered does not exist or match the password. Please try again.");
+  };
+
+  const handleIncorrectSignUp = () => {
+    setShowAlert(true);
+    setAlertMessage("The username entered is already existed. Please try a new username.");
+  };
+
   const handleCityChange = (e) => {
     setInputCityName(e.target.value);
   };
@@ -86,19 +90,27 @@ function App() {
     console.log("Getting weather for this city: ", inputCityName, unit);
   };
 
-  
+  const handleSignUpInputChange = (event) => {
+    setSignUpCredentials({ ...signUpCredentials, [event.target.name]: event.target.value });
+  };
+
+  const toggleSignUpForm = () => {
+    setShowSignUpForm(!showSignUpForm); // Toggle sign-up form visibility
+    setShowLoginForm(false); // Ensure login form is hidden
+  };
+
+
   function getCsrfToken() {
       return document.cookie.split('; ')
           .find(row => row.startsWith('csrftoken'))
           ?.split('=')[1];
   }
   const csrfToken = getCsrfToken();
-  // console.log("csrfToken is ",csrfToken);
+
+
   const handleSetDefaultLocation = () => {
     // Implement the logic to send the city name to the backend
     console.log("Sending city name to backend: ", inputCityName);
-    // Example: fetch('/api/set-default-location', { method: 'POST', body: JSON.stringify({ cityName }) });
-
     fetch('http://127.0.0.1:8000/api/set-default-city/', {
         method: 'POST',
         headers: {
@@ -106,20 +118,18 @@ function App() {
           'X-CSRFToken': csrfToken, // Include CSRF token in the request header
         },
         body: JSON.stringify({ default_city: inputCityName }),
-        credentials: 'include' // If using cookies for session management
+        credentials: 'include' 
     })
-    // .then(response => response.json())
     .then(response =>{
       console.log("response is:", response.json());
     })
     .then(data => {
         if (data.success) {
+            // Handle success
             console.log("Default city set to:", data.default_city);
-            // Handle successful update
         } else {
             // Handle failure
-            alert('data error:', data.success);
-            // alert(data.message)
+            console.log('Data error:', data.success);
         }
     })
     .catch(error => {
@@ -128,75 +138,48 @@ function App() {
   };
 
 
-  const fetchActivityRecommendation = (weatherCode) => {
-    fetch(`http://127.0.0.1:8000/api/activity-recommendation/${weatherCode}/`, {credentials: "include"})
-      .then(response => {
-        console.log("response is:", response)
-        return response.json()})
-      .then(data => {
-        console.log("data activity is:", data.activity)
-        setActivityRecommendation({
-          text: data.activity_recommendation,
-          // iconName: mapWeatherCodeToIcon(data.activity_recommendation) // You'll need to implement this mapping
-        });
-      })
-      .catch(error => console.error('Error fetching activity recommendation:', error));
-  };
-
-
   const fetchWeatherData = (city, currentUnit) => {
-    // const url = new URL('http://127.0.0.1:8000/api/weather-data'); 
-    // url.search = new URLSearchParams({ city: displayedCityName, unit }).toString();
-    
+    // fetch weather data from django and display the information on website
     const convertUnit = currentUnit === 'Celsius' ? 'metric' : 'imperial';
 
-    // fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + currentUnit)
     fetch('http://127.0.0.1:8000/api/weather-data?city=' + encodeURIComponent(city) + '&unit=' + convertUnit, {credentials: "include"})
       .then(response => response.json())
       .then(data => {
         console.log("API Response:", data);
-        console.log("data.icon Response:", data.icon);
-        // Assuming 'data' is the object containing weather information
-        setWeatherData({
-          temperature: data.temperature,
-          condition: data.condition,
-          icon: data.icon,
-          humidity: data.humidity,
-          windSpeed: data.wind_speed,
-          // ... set other pieces of weather data as needed ...
-        });
-        setActivityRecommendation({
-          text: data.activity,
-          // iconName: 'bi-0-circle' // Update this as per your mapping of activity to icon
-        });
-        console.log("check, weatherData.weatherCode is", data.id);
-        if (SEVERE_WEATHER_CODES.has(data.id)) {
-          // Display alert for severe weather
-          alert("Severe weather alert! Please be cautious.");
+        console.log("data.error Response:", data.error);
+        
+        if(data.error == undefined){
+          setWeatherData({
+            temperature: data.temperature,
+            condition: data.condition,
+            icon: data.icon,
+            humidity: data.humidity,
+            windSpeed: data.wind_speed,
+          });
+          setActivityRecommendation({
+            text: data.activity,
+          });
+          console.log("check, weatherData.weatherCode is", data.id);
+          if (SEVERE_WEATHER_CODES.has(data.id)) {
+            // Display alert for severe weather
+            alert("Severe weather alert! Please be cautious.");
+          }
+          setShowAlert(false);
+        }
+        else{
+          console.log('handleIncorrectCityName');
+          handleIncorrectCityName ();
         }
       })
-      .catch(error => console.error('Error fetching weather data:', error));
-      // console.log("weatherData.weatherCode is", data.weatherCode);
-    // fetchActivityRecommendation(weatherData.weatherCode);
+      .catch(error => {
+        console.log('Error fetching weather data:', error);
+        handleIncorrectCityName();
+      });
   };
-
-  // const fetchActivityRecommendation = () => {
-  //   fetch('/api/activity-recommendation') 
-  //     .then(response => response.json())
-  //     .then(data => setActivityRecommendation({
-  //       text: data.text,
-  //       iconName: data.iconName // Make sure the backend sends the correct icon class
-  //     }))
-  //     .catch(error => console.error('Error fetching activity recommendation:', error));
-  // };
 
 
 
   // login feature
-  // const handleLoginInputChange = (e) => {
-  //   setLoginCredentials({ ...loginCredentials, [e.target.name]: e.target.value });
-  // };
-  
   const toggleLoginForm = () => {
     setShowLoginForm(!showLoginForm);
   };
@@ -216,12 +199,10 @@ function App() {
     .catch(error => console.error('Error fetching default city:', error));
 };
 
-  // https://stackoverflow.com/questions/50732815/how-to-use-csrf-token-in-django-restful-api-and-react
+  // source: https://stackoverflow.com/questions/50732815/how-to-use-csrf-token-in-django-restful-api-and-react
   const handleLogin = (event) => {
-    // const csrfToken = getCsrfToken();
 
-    const apiUnit = unit === 'Celsius' ? 'metric' : 'imperial';
-
+    const apiUnit = unit === 'Celsius' ? 'metric' : 'imperial'; //set default unit to celsius
     const csrfToken = getCsrfToken('csrftoken');
     event.preventDefault(); // Prevent form from reloading the page
 
@@ -229,40 +210,23 @@ function App() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'X-CSRFToken': csrfToken,
       },
       body: JSON.stringify(loginCredentials),
       credentials: 'include'
-      // body: JSON.stringify({
-      //   username: 'user_test1',
-      //   password: 'Aa12345678'
-      // }),
     })
     .then(response => response.json())
     .then(data => {
       if (data.success) {
         setIsUserLoggedIn(true);
         setShowLoginForm(false);
-
-
-        // const defaultCity = data.default_city || 'Kingston';
-        // fetchWeatherData(defaultCity, apiUnit);
-        // setDisplayedCityName(defaultCity)
-        // localStorage.setItem('token', data.token);
-
         fetchDefaultCity(data.token);
-        // alert('Good Credentials');
-        console.log('Good Credentials');
       } 
       else {
         alert('Invalid Credentials');
+        handleIncorrectLogin();
       }
     })
-    // .catch(error => {
-    //   console.error('Error:', error);
-    // });
   };
-
 
 
   const handleLogout = () => {
@@ -272,7 +236,7 @@ function App() {
           'Content-Type': 'application/json',
           'X-CSRFToken': csrfToken,
       },
-      credentials: 'include' // Needed to include the session cookie
+      credentials: 'include' 
     })
     .then(response => {
       if (!response.ok) {
@@ -284,28 +248,48 @@ function App() {
     .then(data => {
         console.log("data is successfully", data.success);
         if (data.success) {
-            
             console.log("Logged out successfully");
             localStorage.removeItem('token');
             setIsUserLoggedIn(false);
             
-            // Redirect or update UI as needed
-            // Refresh the page
-            // window.location.reload();
         }
         else{
           alert('log out failed');
         }
     })
-    .catch(error => {
-        // console.error('Logout error:', error);
-    });
-    // localStorage.removeItem('token');
-    // setIsUserLoggedIn(false);
   };
 
-  // Call this function when the city is set or unit changes
+  const handleSignUp = (event) => {
+    event.preventDefault();
+    console.log('signUpCredentials.username is', signUpCredentials.username);
+    console.log('signUpCredentials.password is', signUpCredentials.password);
+    fetch('http://127.0.0.1:8000/api/signup/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            username: signUpCredentials.username,
+            password1: signUpCredentials.password,
+            password2: signUpCredentials.password,
+        }),
+    })
+    .then(response => {
+      console.log('signup response is', response);
+        if (response.ok) {
+            return response.json();
+        }
+        handleIncorrectSignUp();
+    })
+    .then(data => {
+        console.log('Sign-up successful:', data);
+    })
+    .catch(error => {
+        console.error('Error during sign-up:', error);
+    });
+  };
 
+  // Call this function when the city is set, unit changes or dark/light mode changes
   useEffect(() => {
       fetch('http://127.0.0.1:8000/api/check-login-status/', {
           credentials: 'include'
@@ -320,31 +304,89 @@ function App() {
           }
       })
       .catch(error => console.error('Error:', error));
-  }, []);
+      if (darkMode) {
+        document.body.classList.add("dark-mode");
+      } else {
+          document.body.classList.remove("dark-mode");
+      }
+  }, [darkMode]);
 
   
-  // "/website_logo.png"
+
   return (
     
     <div className="App">
+
       <Navbar bg="light" expand="lg">
-        <Container>
-          <Navbar.Brand href="/">
-            <img
-              src="/website_logo.png"
-              width="110"  
-              height="auto"  
-              className="d-inline-block align-top"
-              alt="Logo"
-            />
-          </Navbar.Brand>
-          <Nav className="ms-auto">
-            {/* <Nav.Link href="/signin">Sign In</Nav.Link> */}
-            <Nav.Link onClick={toggleLoginForm}>Sign In</Nav.Link>
-          </Nav>
-        </Container>
+          <Container>
+              <Navbar.Brand href="/">
+                  <img
+                      src="/website_logo.png"
+                      width="110"  
+                      height="auto"  
+                      className="d-inline-block align-top"
+                      alt="Logo"
+                  />
+              </Navbar.Brand>
+              <Navbar.Toggle aria-controls="basic-navbar-nav" />
+              <Navbar.Collapse id="basic-navbar-nav">
+                  <Nav className="ms-auto">
+                      <Nav.Link onClick={toggleLoginForm} className="nav-link-hover">Sign In</Nav.Link>
+                      <Nav.Link onClick={toggleSignUpForm} className="nav-link-hover">Sign Up</Nav.Link>
+                      {isUserLoggedIn && (
+                          <button onClick={handleLogout} className="btn ms-2">
+                              Logout
+                          </button>
+                      )}
+                      <button onClick={() => setDarkMode(!darkMode)} className="btn ms-2">
+                          Toggle {darkMode ? 'Light' : 'Dark'} Mode
+                      </button>
+                  </Nav>
+              </Navbar.Collapse>
+          </Container>
       </Navbar>
 
+      {showAlert && (
+        <Alert variant="danger" onClose={() => setShowAlert(false)} dismissible>
+            {alertMessage}
+        </Alert>
+      )}
+      {showSignUpForm && (
+        <form onSubmit={handleSignUp}>
+            <input
+                type="text"
+                name="username"
+                value={signUpCredentials.username}
+                onChange={handleSignUpInputChange}
+                placeholder="Username"
+            />
+            <input
+                type="password"
+                name="password"
+                value={signUpCredentials.password}
+                onChange={handleSignUpInputChange}
+                placeholder="Password"
+            />
+            <button type="submit">Sign Up</button>
+        </form>
+      )}
+      {showLoginForm && (
+        <form onSubmit={handleLogin}>
+          <input
+            type="text"
+            value={loginCredentials.username}
+            onChange={e => setLoginCredentials({ ...loginCredentials, username: e.target.value })}
+            placeholder="Username"
+          />
+          <input
+            type="password"
+            value={loginCredentials.password}
+            onChange={e => setLoginCredentials({ ...loginCredentials, password: e.target.value })}
+            placeholder="Password"
+          />
+          <button type="submit">Login</button>
+        </form>
+      )}
       <div className="location-bar"> 
         <Container>
           My Location:
@@ -362,18 +404,12 @@ function App() {
         </Container>
       </div>
 
-      <div className="weather-city"> 
-        <Container className="mt-4">
-          {/* <h2>{cityName}, {regionName}</h2> */}
-          <h2>{displayedCityName}</h2>
-        </Container>
-      </div>
 
       <Container className="mt-4 weather-info">
         <h2>{displayedCityName}</h2>
         {isUserLoggedIn && (
           <button 
-            className="btn btn-primary ml-3"
+            className="btn btn-secondary ms-2 "
             onClick={handleSetDefaultLocation}
           >
             Set As Default Location
@@ -403,43 +439,14 @@ function App() {
         </ul>
       </div>
 
-    <div className="activity-recommendation-section">
-      <div className="recommendation-text">
-        <h5>Outdoor Activity Recommendation</h5>
-        <p>{activityRecommendation.text}</p>
+      <div className="activity-recommendation-section">
+        <div className="recommendation-text">
+          <h5>Outdoor Activity Recommendation</h5>
+          <p>{activityRecommendation.text}</p>
+        </div>
       </div>
-      <div className="recommendation-icon">
-        {/* Replace 'activity-icon' with actual icon class based on recommendation */}
-        <i className={`bi ${activityRecommendation.iconName}`}></i> 
-        <img src={`http://openweathermap.org/img/wn/${weatherData.icon}.png`} alt="weather icon"></img>
-        {/* <i class="bi bi-check-circle"></i> */}
-      </div>
-    </div>
-
-  {showLoginForm && (
-    <form onSubmit={handleLogin}>
-      <input
-        type="text"
-        value={loginCredentials.username}
-        onChange={e => setLoginCredentials({ ...loginCredentials, username: e.target.value })}
-        placeholder="Username"
-      />
-      <input
-        type="password"
-        value={loginCredentials.password}
-        onChange={e => setLoginCredentials({ ...loginCredentials, password: e.target.value })}
-        placeholder="Password"
-      />
-      <button type="submit">Login</button>
-    </form>
-  )}
-  {/* <button onClick={handleLogout}>Logout</button> */}
-  {isUserLoggedIn && <button onClick={handleLogout}>Logout</button>}
-
-
     </div>
   );
-
 }
 
 

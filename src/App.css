@@ -39,17 +39,16 @@
 
 
 .location-bar {
-  /* background-color: #yourUniqueColor; Replace with your desired color */
-  padding: 10px 0; /* Add some padding */
-  color: rgb(0, 0, 0); /* Set text color */
-  display: flex; /* Use flexbox */
-  align-items: center; /* Center align items vertically */
-  justify-content: flex-start; /* Align content to the start (left) */
+  padding: 10px 0; 
+  color: rgb(0, 0, 0); 
+  display: flex; 
+  align-items: center; 
+  justify-content: flex-start; 
 }
 
 .location-bar .container {
   text-align: left;
-  flex-grow: 1; /* Allow container to take available horizontal space */
+  flex-grow: 1; 
 }
 
 .location-bar input[type="text"] {
@@ -58,22 +57,27 @@
 }
 
 .location-bar select {
-  margin-left: 20px; /* Increased margin */
+  margin-left: 20px;
   padding: 5px;
 }
 
 .location-bar button {
-  margin-left: 20px; /* Increased margin */
+  margin-left: 20px; 
   padding: 5px;
   border: none;
 }
 
+.nav-link-hover:hover {
+  background-color: #3a3e4234; 
+  color: white; 
+  border-radius: 5px;
+  padding: 5px 10px; 
+}
 
 /* weather city */
 .weather-city .container{
-  text-align: left; /* Align text to the left */
-  padding-left: 15px; /* Add some padding to the left, if needed */
-  /* Add any additional styles you need here */
+  text-align: left; 
+  padding-left: 15px;
 }
 
 /* weather info */
@@ -86,20 +90,18 @@
 }
 
 .weather-icon {
-  width: 100px; /* Adjust as needed */
+  width: 100px; 
   height: auto;
 }
 
 .temperature-display {
-  font-size: 2em; /* Large font size for temperature */
-  /* margin-left: 20px; */
+  font-size: 2em; 
   padding-left: 5%;
   padding-right: 5%;
 }
 
 .weather-details {
   margin-left: 20px;
-  /* list-style: none; */
   width: 350px;
   border-left: 1px solid #ccc; /* Vertical line */
 }
@@ -132,6 +134,17 @@
   margin: 0;
 }
 
-.recommendation-icon {
-  /* Additional styling for icon */
+
+
+/* Light theme styles (default) */
+body {
+  background-color: white;
+  color: black;
+}
+
+/* Dark theme styles */
+body.dark-mode {
+  background-color: black;
+  color: white;
+  /* other dark theme styles */
 }
