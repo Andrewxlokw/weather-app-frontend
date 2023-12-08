@@ -46,7 +46,31 @@ function App() {
     text: 'sadasfkasklms,czxcs', // Text for the recommendation
     iconName: 'bi-0-circle', // Name of the Bootstrap icon
   });
-  
+
+  const SEVERE_WEATHER_CODES = new Set([
+    // Thunderstorm
+    200, 201, 202,  
+    210, 211, 212, 
+    221,  
+    230, 231, 232, 
+    // Rain 
+    502, 503, 504,  
+    511, 520, 521, 522, 
+    531,  
+    // Heavy snow and Sleet
+    602,  
+    611, 612, 613,  
+    615, 616,
+    620, 621, 622,
+    // Rare weather
+    711,  // Smoke
+    731,  // Dust whirls
+    751,  // Sand
+    761,  // Dust
+    762,  // Volcanic ash
+    771,  // Squalls
+    781,  // Tornado
+  ]);
 
   const handleCityChange = (e) => {
     setInputCityName(e.target.value);
@@ -62,22 +86,6 @@ function App() {
     console.log("Getting weather for this city: ", inputCityName, unit);
   };
 
-
-  // token
-  // function getCsrfToken() {
-  //   let csrfToken = null;
-  //   if (document.cookie) {
-  //       const cookies = document.cookie.split(';');
-  //       for (let cookie of cookies) {
-  //           const trimmedCookie = cookie.trim();
-  //           if (trimmedCookie.startsWith('csrftoken=')) {
-  //               csrfToken = trimmedCookie.substring('csrftoken='.length);
-  //               break;
-  //           }
-  //       }
-  //   }
-  //   return csrfToken;
-  // }
   
   function getCsrfToken() {
       return document.cookie.split('; ')
@@ -117,7 +125,24 @@ function App() {
     .catch(error => {
         console.error('Error:', error);
     });
-};
+  };
+
+
+  const fetchActivityRecommendation = (weatherCode) => {
+    fetch(`http://127.0.0.1:8000/api/activity-recommendation/${weatherCode}/`, {credentials: "include"})
+      .then(response => {
+        console.log("response is:", response)
+        return response.json()})
+      .then(data => {
+        console.log("data activity is:", data.activity)
+        setActivityRecommendation({
+          text: data.activity_recommendation,
+          // iconName: mapWeatherCodeToIcon(data.activity_recommendation) // You'll need to implement this mapping
+        });
+      })
+      .catch(error => console.error('Error fetching activity recommendation:', error));
+  };
+
 
   const fetchWeatherData = (city, currentUnit) => {
     // const url = new URL('http://127.0.0.1:8000/api/weather-data'); 
@@ -130,6 +155,7 @@ function App() {
       .then(response => response.json())
       .then(data => {
         console.log("API Response:", data);
+        console.log("data.icon Response:", data.icon);
         // Assuming 'data' is the object containing weather information
         setWeatherData({
           temperature: data.temperature,
@@ -139,19 +165,32 @@ function App() {
           windSpeed: data.wind_speed,
           // ... set other pieces of weather data as needed ...
         });
+        setActivityRecommendation({
+          text: data.activity,
+          // iconName: 'bi-0-circle' // Update this as per your mapping of activity to icon
+        });
+        console.log("check, weatherData.weatherCode is", data.id);
+        if (SEVERE_WEATHER_CODES.has(data.id)) {
+          // Display alert for severe weather
+          alert("Severe weather alert! Please be cautious.");
+        }
       })
       .catch(error => console.error('Error fetching weather data:', error));
+      // console.log("weatherData.weatherCode is", data.weatherCode);
+    // fetchActivityRecommendation(weatherData.weatherCode);
   };
 
-  const fetchActivityRecommendation = () => {
-    fetch('/api/activity-recommendation') 
-      .then(response => response.json())
-      .then(data => setActivityRecommendation({
-        text: data.text,
-        iconName: data.iconName // Make sure the backend sends the correct icon class
-      }))
-      .catch(error => console.error('Error fetching activity recommendation:', error));
-  };
+  // const fetchActivityRecommendation = () => {
+  //   fetch('/api/activity-recommendation') 
+  //     .then(response => response.json())
+  //     .then(data => setActivityRecommendation({
+  //       text: data.text,
+  //       iconName: data.iconName // Make sure the backend sends the correct icon class
+  //     }))
+  //     .catch(error => console.error('Error fetching activity recommendation:', error));
+  // };
+
+
 
   // login feature
   // const handleLoginInputChange = (e) => {
@@ -245,14 +284,14 @@ function App() {
     .then(data => {
         console.log("data is successfully", data.success);
         if (data.success) {
-            window.location.reload();
+            
             console.log("Logged out successfully");
-            // localStorage.removeItem('token');
-            // setIsUserLoggedIn(false);
-            // window.location.reload();
+            localStorage.removeItem('token');
+            setIsUserLoggedIn(false);
+            
             // Redirect or update UI as needed
             // Refresh the page
-
+            // window.location.reload();
         }
         else{
           alert('log out failed');
@@ -266,10 +305,7 @@ function App() {
   };
 
   // Call this function when the city is set or unit changes
-  // useEffect(() => {
-  //   fetchWeatherData(displayedCityName, unit);
-  //   // fetchActivityRecommendation();
-  // }, [displayedCityName, unit]);
+
   useEffect(() => {
       fetch('http://127.0.0.1:8000/api/check-login-status/', {
           credentials: 'include'
@@ -344,23 +380,10 @@ function App() {
           </button>
         )}
       </Container>
-      
 
-      {/* <div className="weather-info">
-        <img src={weatherData.icon} alt="Weather Icon" className="weather-icon" />
-        <div className="temperature-display">
-          {weatherData.temperature} {unit === 'Celsius' ? '°C' : '°F'}
-        </div>
-        <ul className="weather-details">
-          <li>Condition: {weatherData.condition}</li>
-          <li>Wind Speed: {weatherData.windSpeed} km/h</li>
-          <li>Humidity: {weatherData.humidity}%</li>
-        </ul>
-      </div> */}
-      
 
       <div className="weather-info">
-        <img src={weatherData.icon} alt="Weather Icon" className="weather-icon" />
+        <img src={`http://openweathermap.org/img/wn/${weatherData.icon}.png`} alt="Weather Icon" className="weather-icon" />
         <div className="temperature-display">
           {weatherData.temperature} {unit === 'Celsius' ? '°C' : '°F'}
         </div>
@@ -388,6 +411,7 @@ function App() {
       <div className="recommendation-icon">
         {/* Replace 'activity-icon' with actual icon class based on recommendation */}
         <i className={`bi ${activityRecommendation.iconName}`}></i> 
+        <img src={`http://openweathermap.org/img/wn/${weatherData.icon}.png`} alt="weather icon"></img>
         {/* <i class="bi bi-check-circle"></i> */}
       </div>
     </div>
